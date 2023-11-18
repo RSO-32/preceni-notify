@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy files to the working directory
 COPY . .
 
+# Install required packages
+RUN apk add gcc python3-dev musl-dev linux-headers
+
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
