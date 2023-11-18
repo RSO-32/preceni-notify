@@ -10,6 +10,7 @@ from models.notification import Notification
 from models.users import User
 import requests
 from health import Health
+from metrics import Metrics
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -78,6 +79,17 @@ def notify():
             },
         )
 
+@app.route("/metrics")
+def metrics():
+    metrics = Metrics.get_metrics()
+
+    response = ""
+    for metric in metrics:
+        response += f"{metric.name} {metric.value}\n"
+
+    return response
+
+
 
 @app.route("/health/live")
 def health_live():
@@ -95,6 +107,7 @@ def health_test():
 
 
 if __name__ == "__main__":
+    Metrics.init()
     app.run(
         host="0.0.0.0",
         port=environ.get("NOTIFY_SERVICE_PORT"),
