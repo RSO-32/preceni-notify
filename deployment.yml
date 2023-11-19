@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: preceni-notify-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: preceni-notify
+  template:
+    metadata:
+      labels:
+        app: preceni-notify
+    spec:
+      containers:
+        - image: vidvidex/preceni-notify:2023-11-19-18-20-45
+          name: preceni-notify
+          env:
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: database-name
+                key: db-name
+
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: database-host
+                key: db-host
+
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: database-port
+                key: db-port
+
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: database-user
+                key: db-user
+
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database-password
+                key: db-password
+
+          - name: NOTIFY_SERVICE_PORT
+            valueFrom:
+              secretKeyRef:
+                name: notify-port
+                key: notify-service-port
+
+          - name: NOTIFY_SERVICE_DEBUG
+            valueFrom:
+              secretKeyRef:
+                name: notify-debug
+                key: notify-service-debug
+
+          - name: AUTH_SERVICE_URL
+            valueFrom:
+              secretKeyRef:
+                name: auth-url
+                key: auth-service-url
+          ports:
+            - containerPort: 5002
+              name: server
+
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: server
+            failureThreshold: 2
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health/live
+              port: server
+            failureThreshold: 2
+            initialDelaySeconds: 20
+            periodSeconds: 30
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: preceni-notify-lb
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 5002
+      protocol: TCP
+      targetPort: server
+  selector:
+    app: preceni-notify
