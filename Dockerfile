@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install gunicorn
 
 # Expose the Flask application port
-EXPOSE 5000
+EXPOSE 5002
 
 # Run the Flask application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5002", "app:app"]
