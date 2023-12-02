@@ -27,6 +27,19 @@ class Notification:
         return Notification(result[0], result[1], result[2], result[3])
 
     @staticmethod
+    def get_all(id):
+        cursor = Config.conn.cursor()
+        query = """SELECT id, user_id, product_id, price FROM notifications"""
+        cursor.execute(query, (id,))
+        result = cursor.fetchall()
+
+        notifications = []
+        for row in result:
+            notifications.append(Notification(row[0], row[1], row[2], row[3]))
+
+        return notifications
+
+    @staticmethod
     def create(user_id, product_id, price):
         logging.info(
             f"Creating notification for user {user_id} when product {product_id}'s price is under {price}"

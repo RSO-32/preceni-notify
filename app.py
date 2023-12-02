@@ -39,7 +39,7 @@ def verify_user(user_id, token):
 
 
 @app.route("/notifications", methods=["POST"])
-def notifications():
+def create_notification():
     data = request.get_json()
 
     user_id = data["user_id"]
@@ -59,6 +59,13 @@ def notifications():
 
     return notification.to_json(), 201
 
+
+@app.route("/notifications", methods=["GET"])
+def list_notifications():
+
+    notifications = Notification.get_all()
+
+    return jsonify([notification.to_json() for notification in notifications])
 
 @app.route("/notify", methods=["POST"])
 def notify():
