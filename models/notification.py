@@ -27,10 +27,10 @@ class Notification:
         return Notification(result[0], result[1], result[2], result[3])
 
     @staticmethod
-    def get_all(id):
+    def get_all():
         cursor = Config.conn.cursor()
         query = """SELECT id, user_id, product_id, price FROM notifications"""
-        cursor.execute(query, (id,))
+        cursor.execute(query)
         result = cursor.fetchall()
 
         notifications = []
