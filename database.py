@@ -1,8 +1,6 @@
 from config import Config
 from os import environ
 import psycopg2
-import logging
-
 
 class Database:
     @staticmethod
@@ -14,5 +12,3 @@ class Database:
             password=environ.get("DB_PASSWORD"),
             port=environ.get("DB_PORT"),
         )
-
-    logging.info("Initialized database connection")

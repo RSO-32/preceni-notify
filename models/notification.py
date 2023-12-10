@@ -1,9 +1,6 @@
 from config import Config
-import logging
-import sys
 from dataclasses import dataclass
-
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+from flask import current_app as app
 
 
 @dataclass
@@ -16,8 +13,7 @@ class Notification:
     @staticmethod
     def get(id):
         cursor = Config.conn.cursor()
-        query = """
-        SELECT id, user_id, product_id, price FROM notifications WHERE id = %s"""
+        query = "SELECT id, user_id, product_id, price FROM notifications WHERE id = %s"
         cursor.execute(query, (id,))
         result = cursor.fetchone()
 
@@ -41,9 +37,7 @@ class Notification:
 
     @staticmethod
     def create(user_id, product_id, price):
-        logging.info(
-            f"Creating notification for user {user_id} when product {product_id}'s price is under {price}"
-        )
+        app.logger.info(f"Creating notification for user {user_id} when product {product_id}'s price is under {price}")
 
         cursor = Config.conn.cursor()
         query = "INSERT INTO notifications (user_id, product_id, price) VALUES (%s,%s,%s) ON CONFLICT (user_id, product_id) DO NOTHING RETURNING id"
@@ -60,9 +54,7 @@ class Notification:
 
     @staticmethod
     def find(product_id, price):
-        logging.info(
-            f"Finding notifications for product {product_id} when price is under {price}"
-        )
+        app.logger.info(f"Finding notifications for product {product_id} when price is under {price}")
 
         cursor = Config.conn.cursor()
         query = "SELECT notifications.id, notifications.user_id, discord_webhook FROM notifications JOIN user_notifications using (user_id) WHERE product_id = %s AND price >= %s"
@@ -72,10 +64,7 @@ class Notification:
         if results is None:
             return []
 
-        return [
-            Notification(result[0], result[1], product_id, result[2], price)
-            for result in results
-        ]
+        return [Notification(result[0], result[1], product_id, result[2], price) for result in results]
 
     def to_json(self):
         return {
