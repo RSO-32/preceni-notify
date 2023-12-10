@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from os.path import join, dirname
@@ -11,8 +11,11 @@ from health import Health
 from metrics import Metrics
 import logging, graypy
 from uuid import uuid4
+from flask_openapi3 import OpenAPI, Info, Tag
+from pydantic import BaseModel
 
-app = Flask(__name__)
+info = Info(title="Preceni notify", version="1.0.0", description="Preceni notify API")
+app = OpenAPI(__name__, info=info)
 CORS(app)  # Enable CORS for all routes
 
 # Logging
@@ -29,6 +32,20 @@ load_dotenv(dotenv_path)
 
 Database.connect()
 app.logger.info("Connected to database")
+
+notify_tag = Tag(name="notify", description="Notifications")
+health_tag = Tag(name="health", description="Health and metrics")
+
+
+class NotificationResponse(BaseModel):
+    id: int
+    user_id: int
+    product_id: int
+    price: float
+
+
+class NotificationsResponse(BaseModel):
+    notifications: list[NotificationResponse]
 
 
 def verify_user(user_id, token):
@@ -50,7 +67,7 @@ def verify_user(user_id, token):
     return User(id, first_name, last_name, email)
 
 
-@app.route("/notification", methods=["POST"])
+@app.post("/notifications", tags=[notify_tag], summary="Create notification", responses={201: NotificationResponse})
 def create_notification():
     uuid = uuid4()
     app.logger.info(f"START: POST /notification [{uuid}]")
@@ -75,7 +92,7 @@ def create_notification():
     return notification.to_json(), 201
 
 
-@app.route("/notification", methods=["GET"])
+@app.get("/notifications", tags=[notify_tag], summary="Get all notifications", responses={200: NotificationsResponse})
 def list_notifications():
     uuid = uuid4()
     app.logger.info(f"START: GET /notification [{uuid}]")
@@ -85,7 +102,7 @@ def list_notifications():
     return jsonify([notification.to_json() for notification in notifications])
 
 
-@app.route("/notify", methods=["POST"])
+@app.post("/notify", tags=[notify_tag], summary="Notify users")
 def notify():
     uuid = uuid4()
     app.logger.info(f"START: POST /notify [{uuid}]")
@@ -101,13 +118,13 @@ def notify():
     for notification in notifications:
         requests.post(
             notification.discord_webhook,
-            json={"content": f"Price of {product_name} dropped from {previous_price} to {current_price} on {seller}!"}
+            json={"content": f"Price of {product_name} dropped from {previous_price} to {current_price} on {seller}!"},
         )
 
     app.logger.info(f"END: POST /notify [{uuid}]")
 
 
-@app.route("/metrics")
+@app.get("/metrics", tags=[health_tag], summary="Get metrics")
 def metrics():
     app.logger.info("GET: Metrics")
     metrics = Metrics.get_metrics()
@@ -119,7 +136,7 @@ def metrics():
     return response
 
 
-@app.route("/health/live")
+@app.get("/health/live", tags=[health_tag], summary="Health live check")
 def health_live():
     app.logger.info("GET: Health live check")
     status, checks = Health.check_health()
@@ -128,7 +145,7 @@ def health_live():
     return jsonify({"status": status, "checks": checks}), code
 
 
-@app.route("/health/test/toggle", methods=["PUT"])
+@app.put("/health/test/toggle", tags=[health_tag], summary="Health test toggle")
 def health_test():
     app.logger.info("PUT: Health test toggle")
     Health.force_fail = not Health.force_fail
