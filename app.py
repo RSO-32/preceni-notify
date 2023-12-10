@@ -19,7 +19,7 @@ CORS(app)  # Enable CORS for all routes
 graylog_handler = graypy.GELFUDPHandler("logs.meteo.pileus.si", 12201)
 environment = "dev" if environ.get("NOTIFY_SERVICE_DEBUG") else "prod"
 graylog_handler.setFormatter(
-    logging.Formatter(f"preceni-notify {environment} %(asctime)s %(levelname)s %(name)s %(message)s [{uuid4()}]")
+    logging.Formatter(f"preceni-notify {environment} %(asctime)s %(levelname)s %(name)s %(message)s")
 )
 app.logger.addHandler(graylog_handler)
 app.logger.setLevel(logging.INFO)
@@ -52,7 +52,8 @@ def verify_user(user_id, token):
 
 @app.route("/notification", methods=["POST"])
 def create_notification():
-    app.logger.info("START: POST /notification")
+    uuid = uuid4()
+    app.logger.info(f"START: POST /notification [{uuid}]")
     data = request.get_json()
 
     user_id = data["user_id"]
@@ -70,22 +71,24 @@ def create_notification():
     if notification is None:
         return {"message": f"Notification for product {product_id} already exists"}, 409
 
-    app.logger.info("END: POST /notification")
+    app.logger.info(f"END: POST /notification [{uuid}]")
     return notification.to_json(), 201
 
 
 @app.route("/notification", methods=["GET"])
 def list_notifications():
-    app.logger.info("START: GET /notification")
+    uuid = uuid4()
+    app.logger.info(f"START: GET /notification [{uuid}]")
     notifications = Notification.get_all()
 
-    app.logger.info("END: GET /notification")
+    app.logger.info(f"END: GET /notification [{uuid}]")
     return jsonify([notification.to_json() for notification in notifications])
 
 
 @app.route("/notify", methods=["POST"])
 def notify():
-    app.logger.info("START: POST /notify")
+    uuid = uuid4()
+    app.logger.info(f"START: POST /notify [{uuid}]")
     data = request.get_json()
     product_id = data["product_id"]
     product_name = data["product_name"]
@@ -101,7 +104,7 @@ def notify():
             json={"content": f"Price of {product_name} dropped from {previous_price} to {current_price} on {seller}!"}
         )
 
-    app.logger.info("END: POST /notify")
+    app.logger.info(f"END: POST /notify [{uuid}]")
 
 
 @app.route("/metrics")
