@@ -67,7 +67,7 @@ def verify_user(user_id, token):
     return User(id, first_name, last_name, email)
 
 
-@app.post("/notifications", tags=[notify_tag], summary="Create notification", responses={201: NotificationResponse})
+@app.post("/notify/notifications", tags=[notify_tag], summary="Create notification", responses={201: NotificationResponse})
 def create_notification():
     uuid = uuid4()
     app.logger.info(f"START: POST /notification [{uuid}]")
@@ -92,7 +92,7 @@ def create_notification():
     return notification.to_json(), 201
 
 
-@app.get("/notifications", tags=[notify_tag], summary="Get all notifications", responses={200: NotificationsResponse})
+@app.get("/notify/notifications", tags=[notify_tag], summary="Get all notifications", responses={200: NotificationsResponse})
 def list_notifications():
     uuid = uuid4()
     app.logger.info(f"START: GET /notification [{uuid}]")
@@ -124,7 +124,7 @@ def notify():
     app.logger.info(f"END: POST /notify [{uuid}]")
 
 
-@app.get("/metrics", tags=[health_tag], summary="Get metrics")
+@app.get("/notify/metrics", tags=[health_tag], summary="Get metrics")
 def metrics():
     app.logger.info("GET: Metrics")
     metrics = Metrics.get_metrics()
@@ -136,7 +136,7 @@ def metrics():
     return response
 
 
-@app.get("/health/live", tags=[health_tag], summary="Health live check")
+@app.get("/notify/health/live", tags=[health_tag], summary="Health live check")
 def health_live():
     app.logger.info("GET: Health live check")
     status, checks = Health.check_health()
@@ -145,7 +145,7 @@ def health_live():
     return jsonify({"status": status, "checks": checks}), code
 
 
-@app.put("/health/test/toggle", tags=[health_tag], summary="Health test toggle")
+@app.put("/notify/health/test/toggle", tags=[health_tag], summary="Health test toggle")
 def health_test():
     app.logger.info("PUT: Health test toggle")
     Health.force_fail = not Health.force_fail
