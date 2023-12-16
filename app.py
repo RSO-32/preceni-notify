@@ -124,7 +124,7 @@ def notify():
     app.logger.info(f"END: POST /notify [{uuid}]")
 
 
-@app.get("/notify/metrics", tags=[health_tag], summary="Get metrics")
+@app.get("/metrics", tags=[health_tag], summary="Get metrics")
 def metrics():
     app.logger.info("GET: Metrics")
     metrics = Metrics.get_metrics()
@@ -136,7 +136,7 @@ def metrics():
     return response
 
 
-@app.get("/health/live", tags=[health_tag], summary="Health live check")
+@app.get("/notify/health/live", tags=[health_tag], summary="Health live check")
 def health_live():
     app.logger.info("GET: Health live check")
     status, checks = Health.check_health()
