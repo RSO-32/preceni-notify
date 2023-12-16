@@ -136,7 +136,7 @@ def metrics():
     return response
 
 
-@app.get("/health/live", tags=[health_tag], summary="Health live check")
+@app.get("/notify/health/live", tags=[health_tag], summary="Health live check")
 def health_live():
     app.logger.info("GET: Health live check")
     status, checks = Health.check_health()
