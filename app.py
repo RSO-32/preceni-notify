@@ -67,7 +67,9 @@ def verify_user(user_id, token):
     return User(id, first_name, last_name, email)
 
 
-@app.post("/notify/notifications", tags=[notify_tag], summary="Create notification", responses={201: NotificationResponse})
+@app.post(
+    "/notify/notifications", tags=[notify_tag], summary="Create notification", responses={201: NotificationResponse}
+)
 def create_notification():
     uuid = uuid4()
     app.logger.info(f"START: POST /notification [{uuid}]")
@@ -77,22 +79,30 @@ def create_notification():
     token = data["token"]
     product_id = data["product_id"]
     price = data["price"]
+    discord_webhook = data["discord_webhook"]
 
     user = verify_user(user_id, token)
 
     if user is None:
+        app.logger.info("user is not verified")
+        app.logger.info(f"END: POST /notification [{uuid}]")
         return {"message": "Unauthorized"}, 401
 
-    notification = Notification.create(user.id, product_id, price)
+    notification = Notification.create(user.id, product_id, price, discord_webhook)
 
     if notification is None:
+        app.logger.info(f"Notification for product {product_id} already exists")
+        app.logger.info(f"END: POST /notification [{uuid}]")
         return {"message": f"Notification for product {product_id} already exists"}, 409
 
+    app.logger.info(f"Notification for product {product_id} created")
     app.logger.info(f"END: POST /notification [{uuid}]")
     return notification.to_json(), 201
 
 
-@app.get("/notify/notifications", tags=[notify_tag], summary="Get all notifications", responses={200: NotificationsResponse})
+@app.get(
+    "/notify/notifications", tags=[notify_tag], summary="Get all notifications", responses={200: NotificationsResponse}
+)
 def list_notifications():
     uuid = uuid4()
     app.logger.info(f"START: GET /notification [{uuid}]")
@@ -102,7 +112,7 @@ def list_notifications():
     return jsonify([notification.to_json() for notification in notifications])
 
 
-@app.post("/notify", tags=[notify_tag], summary="Notify users")
+@app.post("/notify/notify", tags=[notify_tag], summary="Notify users")
 def notify():
     uuid = uuid4()
     app.logger.info(f"START: POST /notify [{uuid}]")
@@ -118,10 +128,12 @@ def notify():
     for notification in notifications:
         requests.post(
             notification.discord_webhook,
-            json={"content": f"Price of {product_name} dropped from {previous_price} to {current_price} on {seller}!"},
+            json={"content": f"Price of {product_name} dropped from {previous_price} € to {current_price} € on {seller}!"},
         )
 
     app.logger.info(f"END: POST /notify [{uuid}]")
+
+    return jsonify({"message": "Notifications sent"})
 
 
 @app.get("/notify/metrics", tags=[health_tag], summary="Get metrics")
