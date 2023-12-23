@@ -154,7 +154,6 @@ def health_test():
 
 
 if __name__ == "__main__":
-    Metrics.init()
     app.run(
         host="0.0.0.0",
         port=environ.get("NOTIFY_SERVICE_PORT"),
