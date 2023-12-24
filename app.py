@@ -15,7 +15,7 @@ from flask_openapi3 import OpenAPI, Info, Tag
 from pydantic import BaseModel
 
 info = Info(title="Preceni notify", version="1.0.0", description="Preceni notify API")
-app = OpenAPI(__name__, info=info)
+app = OpenAPI(__name__, info=info, doc_prefix="/notify/openapi")
 CORS(app)  # Enable CORS for all routes
 
 # Logging
