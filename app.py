@@ -48,10 +48,11 @@ class NotificationsResponse(BaseModel):
     notifications: list[NotificationResponse]
 
 
-def verify_user(user_id, token):
+def verify_user(user_id, token, uuid):
     app.logger.info(f"Verifying user {user_id}")
     url = environ.get("AUTH_SERVICE_URL") + "/user-by-token"
-    request = requests.get(url, params={"token": token, "user_id": user_id})
+    headers = {"X-Request-ID": str(uuid)}
+    request = requests.get(url, params={"token": token, "user_id": user_id}, headers=headers)
 
     if request.status_code != 200:
         app.logger.info(f"User {user_id} not verified")
@@ -81,7 +82,7 @@ def create_notification():
     price = data["price"]
     discord_webhook = data["discord_webhook"]
 
-    user = verify_user(user_id, token)
+    user = verify_user(user_id, token, uuid)
 
     if user is None:
         app.logger.info("user is not verified")
@@ -128,7 +129,9 @@ def notify():
     for notification in notifications:
         requests.post(
             notification.discord_webhook,
-            json={"content": f"Price of {product_name} dropped from {previous_price} € to {current_price} € on {seller}!"},
+            json={
+                "content": f"Price of {product_name} dropped from {previous_price} € to {current_price} € on {seller}!"
+            },
         )
 
     app.logger.info(f"END: POST /notify [{uuid}]")
